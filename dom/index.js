@@ -2334,4 +2334,4 @@ dom.number = {
     }
 };
 
-module.exprots = dom;
+module.exports = dom

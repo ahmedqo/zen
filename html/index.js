@@ -1,3 +1,9 @@
+class ref {
+	constructor() {
+		this.current = null;
+	}
+}
+
 function uuid() {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
@@ -24,7 +30,7 @@ function html(parts, ...args) {
             };
         }
 
-        if (typeOf(arg) === "function") {
+        if (typeOf(arg) === "function" || arg instanceof ref) {
             const id = uuid();
             return {
                 events: {...acc.events,
@@ -91,4 +97,6 @@ function html(parts, ...args) {
     return template;
 }
 
-module.exports = html;
+const NM = (module.exports = html);
+
+NM.ref = ref;

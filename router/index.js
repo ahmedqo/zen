@@ -1,50 +1,54 @@
-const { render } = require('../component');
+const { render } = require("../component");
 
 function Router() {
-    var _loader, _header, _footer, _root, _state, _change, _hash = false,
-        _contain = document.createElement('div'),
+    var _loader,
+        _header,
+        _footer,
+        _root,
+        _state,
+        _change,
+        _hash = false,
+        _contain = document.createElement("div"),
         _routes = [],
         _log = {};
 
     function Router(root) {
-        _root = (root instanceof HTMLElement) ?
-            root : document.querySelector(root);
+        _root = root instanceof HTMLElement ? root : document.querySelector(root);
         return Router;
     }
 
     Router.header = function(header) {
         _header = header;
         return this;
-    }
+    };
     Router.footer = function(footer) {
         _footer = footer;
         return this;
-    }
+    };
     Router.loader = function(loader) {
         _loader = loader;
         return this;
-    }
+    };
     Router.change = function(change) {
         _change = change;
         return this;
-    }
+    };
     Router.state = function(state) {
         _state = state;
         return this;
-    }
+    };
     Router.load = function(load) {
-        if (typeof load === 'function')
-            document.addEventListener('DOMContentLoaded', load);
-        return this
-    }
+        if (typeof load === "function") document.addEventListener("DOMContentLoaded", load);
+        return this;
+    };
     Router.hash = function(hash) {
         _hash = hash ? hash : true;
         return this;
-    }
+    };
 
     Router.init = function() {
         var self = this;
-        if (_hash && !location.hash) location.hash = '#/';
+        if (_hash && !location.hash) location.hash = "#/";
         if (_header) {
             _append(_header, _root);
         }
@@ -52,20 +56,21 @@ function Router() {
         if (_footer) {
             _append(_footer, _root);
         }
-        window.addEventListener('popstate', function() {
-            if (typeof state === 'function') state();
+        window.addEventListener("popstate", function() {
+            if (typeof state === "function") state();
         });
-        (_hash && window.addEventListener('hashchange', function() {
-            self.goto(location.hash.slice(1));
-        }));
+        _hash &&
+            window.addEventListener("hashchange", function() {
+                self.goto(location.hash.slice(1));
+            });
         if (_hash) self.goto(location.hash.slice(1));
         else self.goto(location.pathname);
         return self;
-    }
+    };
     Router.add = function(path, view, name) {
-        if (typeof path === 'string' && (['string', 'function'].includes(typeof view) || view instanceof HTMLElement || view instanceof Promise)) {
-            path = !path || path == '*' ? '/404' : path;
-            path = path.endsWith('/') && path.length > 1 ? path.substr(0, path.length - 1) : path;
+        if (typeof path === "string" && (["string", "function"].includes(typeof view) || view instanceof HTMLElement || view instanceof Promise)) {
+            path = !path || path == "*" ? "/404" : path;
+            path = path.endsWith("/") && path.length > 1 ? path.substr(0, path.length - 1) : path;
             _routes.push({ path: path, view: view, name: name });
         }
         return this;
@@ -76,14 +81,14 @@ function Router() {
             prepath: [path],
             prename: [name],
             add: function(path, view, name) {
-                if (typeof path === 'string' && (['string', 'function'].includes(typeof view) || view instanceof HTMLElement || view instanceof Promise)) {
-                    path = !path || path == '*' ? '/404' : path;
-                    path = path.startsWith('/') ? path : '/' + path;
-                    path = path.endsWith('/') ? path.substr(0, path.length - 2) : path;
+                if (typeof path === "string" && (["string", "function"].includes(typeof view) || view instanceof HTMLElement || view instanceof Promise)) {
+                    path = !path || path == "*" ? "/404" : path;
+                    path = path.startsWith("/") ? path : "/" + path;
+                    path = path.endsWith("/") ? path.substr(0, path.length - 2) : path;
                     this.routes.push({
                         view: view,
-                        path: this.prepath.join('') + path,
-                        name: this.prename.join('-') + '-' + name,
+                        path: this.prepath.join("") + path,
+                        name: this.prename.join("-") + "-" + name,
                     });
                 }
                 return this;
@@ -93,24 +98,24 @@ function Router() {
                 this.prename.push(name);
                 fn.call(this);
                 return this;
-            }
-        }
+            },
+        };
         fn.call(router);
         _routes = [..._routes, ...router.routes];
         return this;
-    }
+    };
     Router.goto = function(url) {
-        if (!history.state || (history.state.path !== url)) {
+        if (!history.state || history.state.path !== url) {
             history.pushState({
                     path: url,
                 },
                 document.title,
-                (_hash ? '#' : '') + url
+                (_hash ? "#" : "") + url
             );
         }
         _run();
         return this;
-    }
+    };
     Router.url = function(name) {
         for (var _len = arguments.length, data = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
             data[_key - 1] = arguments[_key];
@@ -119,27 +124,27 @@ function Router() {
             return r.name === name;
         });
         if (route) {
-            var path = route.path.replace(/{\w+:\w+}/g, '(.+)');
+            var path = route.path.replace(/{\w+:\w+}/g, "(.+)");
             if (data.length) {
                 var i = -1;
-                path = path.replaceAll('(.+)', function() {
+                path = path.replaceAll("(.+)", function() {
                     i++;
                     return data[i];
                 });
             }
-            var url = '/' + (path.startsWith('/') ? path.slice(1) : path);
+            var url = "/" + (path.startsWith("/") ? path.slice(1) : path);
             return url;
         }
         return undefined;
-    }
+    };
     Router.param = function(name) {
         if (_log.current && _log.current.params && _log.current.params[name]) return _log.current.params[name];
         return undefined;
-    }
+    };
     Router.query = function(name) {
         if (_log.current && _log.current.queries && _log.current.queries[name]) return _log.current.queries[name];
         return undefined;
-    }
+    };
     Router.clean = function() {
         Router.routes = _routes = [];
         _header = undefined;
@@ -147,15 +152,15 @@ function Router() {
         delete Router.components.header;
         delete Router.components.footer;
         return this;
-    }
+    };
 
     function _path(path) {
-        return new RegExp('^' + path.replace(/\//g, '\\/').replace(/{\w+:\w+}/g, '(.+)') + '$');
+        return new RegExp("^" + path.replace(/\//g, "\\/").replace(/{\w+:\w+}/g, "(.+)") + "$");
     }
 
     function _match() {
-        var url = (_hash ? location.hash.slice(1) : location.pathname) || '/';
-        if (!_hash && !url.startsWith('/')) url = '/' + url;
+        var url = (_hash ? location.hash.slice(1) : location.pathname) || "/";
+        if (!_hash && !url.startsWith("/")) url = "/" + url;
         var potentialMatches = _routes.map(function(route) {
             return {
                 route: route,
@@ -170,7 +175,7 @@ function Router() {
         if (!match) {
             match = {
                 route: _routes.find(function(x) {
-                    return x.path === '/404';
+                    return x.path === "/404";
                 }),
                 result: [url],
             };
@@ -190,37 +195,37 @@ function Router() {
             keys.map(function(key, i) {
                 var val = void 0;
                 switch (types[i].toLowerCase()) {
-                    case 's':
-                    case 'str':
-                    case 'string':
+                    case "s":
+                    case "str":
+                    case "string":
                         val = String(values[i]);
                         break;
-                    case 'i':
-                    case 'int':
-                    case 'intiger':
+                    case "i":
+                    case "int":
+                    case "intiger":
                         val = parseInt(values[i]);
                         break;
-                    case 'n':
-                    case 'd':
-                    case 'nbr':
-                    case 'num':
-                    case 'number':
-                    case 'decimal':
+                    case "n":
+                    case "d":
+                    case "nbr":
+                    case "num":
+                    case "number":
+                    case "decimal":
                         val = Number(values[i]);
                         break;
-                    case 'r':
-                    case 'f':
-                    case 'real':
-                    case 'flaot':
+                    case "r":
+                    case "f":
+                    case "real":
+                    case "flaot":
                         val = parseFloat(values[i]);
                         break;
-                    case 'b':
-                    case 'bool':
-                    case 'boolean':
+                    case "b":
+                    case "bool":
+                    case "boolean":
                         val = Boolean(values[i]);
                         break;
-                    case 'm':
-                    case 'mixed':
+                    case "m":
+                    case "mixed":
                     default:
                         val = values[i];
                         break;
@@ -233,12 +238,9 @@ function Router() {
     function _queries() {
         var params = new URLSearchParams(location.search);
         var obj = {};
-        new Set([...params.keys()])
-            .forEach(key => {
-                obj[key] = params.getAll(key).length > 1 ?
-                    params.getAll(key) :
-                    params.get(key);
-            });
+        new Set([...params.keys()]).forEach((key) => {
+            obj[key] = params.getAll(key).length > 1 ? params.getAll(key) : params.get(key);
+        });
         return obj;
     }
 
@@ -255,25 +257,25 @@ function Router() {
     }
 
     function _append(element, anchor, opts = {}) {
-        var el = null;
         if (opts.clearAnchor) {
-            anchor.innerHTML = '';
+            anchor.innerHTML = "";
         }
-        if (typeof element === 'string') {
-            const _new = document.createElement('div');
-            _new.innerHTML = element;
-            anchor.appendChild(render(_new));
-        } else if (typeof element === 'function') {
+        if (element instanceof HTMLElement) {
+            anchor.appendChild(element);
+            return;
+        }
+        if (typeof element === "function") {
             const generated = element({ params: opts.params, queries: opts.queries });
             _append(generated, anchor, opts);
-        } else if (element instanceof Promise) {
-            _append(_loader, anchor, opts);
-            element.then(res => {
-                _append(res, anchor, opts);
-            });
-        } else {
-            anchor.appendChild(render(element));
+            return;
         }
+        if (typeof element === "string") {
+            const _new = document.createElement("div");
+            _new.innerHTML = element;
+            anchor.appendChild(render(_new));
+            return;
+        }
+        anchor.appendChild(render(element));
     }
 
     function _run() {
@@ -283,10 +285,10 @@ function Router() {
         _append(match.route.view, _contain, {
             clearAnchor: true,
             params,
-            queries
+            queries,
         });
         _logger(match, params, queries);
-        if (typeof _change === 'function') _change(match.result[0], params, queries);
+        if (typeof _change === "function") _change(match.result[0], params, queries);
     }
 
     Router.components = {};

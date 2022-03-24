@@ -1,5 +1,5 @@
-const html = require('../html');
-const css = require('../css');
+const html = require("../html");
+const css = require("../css");
 
 const invalidChars = /[^a-zA-Z0-9:]+/g;
 const obj = {
@@ -40,7 +40,7 @@ const obj = {
             }
         }
         if (!isSameFunction) {
-            el.__handlers[ev[0]] = [eventFunction]
+            el.__handlers[ev[0]] = [eventFunction];
             el.addEventListener(eventName, function(e) {
                 event(ev, e);
                 eventFunction(e);
@@ -58,6 +58,10 @@ const obj = {
             const currentAttrs = this.attrs(currentNode);
 
             for (const attr in currentAttrs) {
+                if (attr === "ref") {
+                    events[currentAttrs[attr]].current = currentNode;
+                    currentNode.removeAttribute("ref");
+                }
                 const isEvent = attr.startsWith("@");
                 if (isEvent) {
                     this.addEvent(currentNode, attr, events[currentAttrs[attr]]);
@@ -69,7 +73,6 @@ const obj = {
 
     merge(base, modified, opts, events) {
         opts = opts || {};
-
         opts.key = opts.key || ((node) => node.id);
 
         if (!base.childNodes.length && typeof modified === "string") {
@@ -124,7 +127,6 @@ const obj = {
                     base: this.attrs(baseNode),
                     new: this.attrs(newNode),
                 };
-
                 for (const attr in attrs.base) {
                     if (attr in attrs.new) continue;
                     baseNode.removeAttribute(attr);
@@ -263,7 +265,7 @@ function refs(s) {
             if (e.hasAttribute("ref")) return e;
         })
         .forEach(function(e) {
-            var ref = e.getAttribute('ref');
+            var ref = e.getAttribute("ref");
             e.setAttribute("part", "--" + ref);
             ix.push(ref);
             ix = [...new Set(ix)];
@@ -272,24 +274,26 @@ function refs(s) {
         var i = Array.from(s._shadowRoot.querySelectorAll("[ref='" + e + "']"));
         if (i.length > 1) s.refs[e] = i;
         else s.refs[e] = i[0];
-        i.forEach(e => e.removeAttribute('ref'));
+        i.forEach((e) => e.removeAttribute("ref"));
     });
 }
 
 function Component({
-    mode = "closed",
-    props = {},
-    state = {},
-    logic = {},
-    created = function() {},
-    mounted = function() {},
-    updated = function() {},
-    changed = function() {},
-    adopted = function() {},
-    removed = function() {},
-    render = () => html ``,
-    styles = () => css ``,
-}, Class = null) {
+        mode = "closed",
+        props = {},
+        state = {},
+        logic = {},
+        created = function() {},
+        mounted = function() {},
+        updated = function() {},
+        changed = function() {},
+        adopted = function() {},
+        removed = function() {},
+        render = () => html ``,
+        styles = () => css ``,
+    },
+    Class = null
+) {
     class Component extends(Class || HTMLElement) {
         constructor() {
             super();
@@ -451,14 +455,17 @@ function Component({
         }
 
         async render() {
+            var style =
+                this._styles() +
+                css `
+					${this._sass}
+				`;
+            style = style.length > 0 ? `<style>${style}</style>` : "";
             const template = await this._template();
-            const sass = css `:host{${this._sass}}`;
-            const innerHTML = typeof template === "string" ? template : template.string;
-            const result = html `<style>
-					${this._styles()+sass}</style
-				>${innerHTML}`;
-            obj.merge(this._shadowRoot, result.string, {}, template.events);
-            refs(this);
+            const text = style + template.string;
+            const event = template.events;
+            obj.merge(this._shadowRoot, text, {}, event);
+            //refs(this);
             this.updated();
         }
     }
@@ -467,7 +474,7 @@ function Component({
 }
 
 function create(t, { props, attrs, logic } = {}, ...c) {
-    var e = document.createElement(t);
+    var e = typeof t === "string" ? document.createElement(t) : new t();
     if (props) {
         for (var n in props) {
             e[n] = props[n];
@@ -512,21 +519,23 @@ function choose(value, cases, def) {
         }
     }
     return def && def();
-};
+}
 
 function exist(value) {
     return !(!value && typeof value !== "number") ||
         !(typeof value === "string" && value.trim().length === 0) ||
         !(typeof value === "object" && Object.keys(value).length === 0) ||
-        !(Array.isArray(value) && value.length === 0) ? value : null;
+        !(Array.isArray(value) && value.length === 0) ?
+        value :
+        null;
 }
 
 function when(condition, trueCase, falseCase) {
-    return condition ? (typeof trueCase === "function" ? trueCase() : trueCase) : (typeof falseCase === "function" ? falseCase() : (falseCase || null));
+    return condition ? (typeof trueCase === "function" ? trueCase() : trueCase) : typeof falseCase === "function" ? falseCase() : falseCase || null;
 }
 
 function* join(items, joiner) {
-    const isFunction = typeof joiner === 'function';
+    const isFunction = typeof joiner === "function";
     if (items !== undefined) {
         let i = -1;
         for (const value of items) {
@@ -556,7 +565,7 @@ function* range(startOrEnd, end, step = 1) {
     }
 }
 
-const NM = module.exports = Component;
+const NM = (module.exports = Component);
 
 NM.render = render;
 NM.define = define;
